@@ -48,6 +48,18 @@ def image_resize(im, inter = cv2.INTER_AREA):
     resized = cv2.resize(im, dim)
     return resized
 
+def load_splash():
+    global img
+    for img_display in frame.winfo_children():
+        img_display.destroy()
+    img = Image.open("App/assets/hehe.png")
+    basewidth = 600
+    wpercent = (basewidth / float(img.size[0]))
+    hsize = int((float(img.size[1] * float(wpercent))))
+    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(img)
+    panel_image = tk.Label(frame, image=img).pack()
+
 # load image when Select Image button is pressed
 def load_img():
     global img, img_data
@@ -65,6 +77,34 @@ def load_img():
     panel = tk.Label(frame, text=str(file_name[len(file_name) -1]).upper()).pack()
     panel_image = tk.Label(frame, image=img).pack()    # tk.Label --> implements a display box for text or images
 
+# capture images from live webcam
+def live_img():
+    global img, img_data, after_id
+    for img_display in frame.winfo_children():
+        img_display.destroy()
+    _, cam_img = cap.read()
+    img = emotion(cam_img)
+    b,g,r = cv2.split(img)
+    img = cv2.merge((r,g,b))
+    im = Image.fromarray(img)
+    img = ImageTk.PhotoImage(image=im)
+    panel = tk.Label(frame, text="Live Cam").pack()
+    panel_image = tk.Label(frame, image=img).pack()
+    after_id = frame.after(10, live_img)     # after 10 ms calls live_img function
+
+# setup for webcam live feature
+def live_setup():
+    global live_tab, after_id
+    if live_tab:
+        load_splash()
+        live_btn_text.set("Live")
+        frame.after_cancel(after_id)
+        live_tab = False
+    else:
+        live_btn_text.set("Stop")
+        live_img()
+        live_tab = True
+
 
 root = tk.Tk()                    # initializes tkinter interpreter and creates root window 
 root.title('EMOTIONS')            # title bar
@@ -80,8 +120,8 @@ img_btn = tk.Button(root, text = 'Select Image', padx=35, pady=10, command=load_
 img_btn.pack(side = tk.LEFT)
 live_btn_text = tk.StringVar()         # variable holds a string data which can be retrived
 live_btn_text.set("Live")
-#live_btn = tk.Button(root, textvariable = live_btn_text, padx=35, pady=10, command=live_setup)
-#live_btn.pack(side = tk.RIGHT)
+live_btn = tk.Button(root, textvariable = live_btn_text, padx=35, pady=10, command=live_setup)
+live_btn.pack(side = tk.RIGHT)
 
-#load_splash()
+load_splash()
 root.mainloop()            # needed for tkinter files
