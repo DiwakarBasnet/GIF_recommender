@@ -23,7 +23,7 @@ def emotion(img):
     for (x,y,w,h) in faces_detected:
         cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),thickness=7)
         roi_gray = gray_img[y:y+w,x:x+h]        # cropping region i.e face area from image
-        roi_gray = cv2.resize(roi_gray,(64,64))
+        roi_gray = cv2.resize(roi_gray,(48,48))
         img_pixels = image.img_to_array(roi_gray)
         img_pixels = np.expand_dims(img_pixels, axis = 0)
         img_pixels /= 255
