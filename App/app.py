@@ -29,7 +29,7 @@ def emotion(img):
         img_pixels /= 255
         predictions = model.predict(img_pixels)
         max_index = np.argmax(predictions[0])
-        emotions = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+        emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
         predicted_emotion = emotions[max_index]
         cv2.putText(img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255), 2)
     resized_img = img
