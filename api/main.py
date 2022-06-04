@@ -12,8 +12,10 @@ CLASS_NAMES = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'
 
 
 def read_file_as_image(data):
-    image = np.array(Image.open(BytesIO(data)))
-    return image
+    image = Image.open(BytesIO(data))
+    image = image.resize((48,48))
+    img = np.array(image)
+    return img
 
 
 @app.post("/predict")
@@ -25,10 +27,10 @@ async def predict(
 
     predictions = MODEL.predict(img_batch)
 
-    predicted_clas = CLASS_NAMES[np.argmax(predictions[0])]
+    predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
     confidence = np.max(predictions[0])
     return{
-        'class': predicted_clas,
+        'class': predicted_class,
         'confidence': float(confidence)
     }
 

@@ -8,8 +8,10 @@ from keras.preprocessing import image
 import cv2
 
 # model selection
-model = tf.keras.models.model_from_json(open("Model/model.json","r").read())
-model.load_weights("Model/model.h5")
+# model = tf.keras.models.model_from_json(open("Model/model.json","r").read())
+# model.load_weights("Model/model.h5")
+model = tf.keras.models.load_model("./Model/model2")
+CLASS_NAMES = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 face_haar_cascade = cv2.CascadeClassifier("Model/haarcascade_frontalface_default.xml")
 cap = cv2.VideoCapture(0)
 
@@ -21,33 +23,19 @@ def emotion(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces_detected = face_haar_cascade.detectMultiScale(gray_img, 1.4, 5)    # 1.4 and 5 are scaleFactor and minNeighbors
     for (x,y,w,h) in faces_detected:
-        cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),thickness=7)
-        roi_gray = gray_img[y:y+w,x:x+h]        # cropping region i.e face area from image
-        roi_gray = cv2.resize(roi_gray,(48,48))
-        img_pixels = image.img_to_array(roi_gray)
+        cv2.rectangle(img, (x,y), (x+w,y+h), (0,255,0), 2)
+        crop_rgb = img[y:y+w, x:x+h]                # cropping region i.e face area from image
+        crop_rgb = cv2.resize(crop_rgb, (48,48))
+        img_pixels = image.img_to_array(crop_rgb)
         img_pixels = np.expand_dims(img_pixels, axis = 0)
-        img_pixels /= 255
         predictions = model.predict(img_pixels)
         max_index = np.argmax(predictions[0])
-        emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-        predicted_emotion = emotions[max_index]
+        predicted_emotion = CLASS_NAMES[max_index]
         cv2.putText(img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255), 2)
     resized_img = img
     return resized_img     # sends back the original image
 
-# resize image
-def image_resize(im, inter = cv2.INTER_AREA):
-    h, w, c = im.shape
-    if w > h:
-        r = 600 / W
-    else:
-        r = 480 / h
-    width = int(im.shape[1] * r)
-    height = int(im.shape[0] * r)
-    dim = (width, height)
-    resized = cv2.resize(im, dim)
-    return resized
-
+# loads splash image at start of program
 def load_splash():
     global img
     for img_display in frame.winfo_children():
@@ -56,7 +44,7 @@ def load_splash():
     basewidth = 600
     wpercent = (basewidth / float(img.size[0]))
     hsize = int((float(img.size[1] * float(wpercent))))
-    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+    #img = img.resize((basewidth, hsize), Image.ANTIALIAS)
     img = ImageTk.PhotoImage(img)
     panel_image = tk.Label(frame, image=img).pack()
 
@@ -68,7 +56,6 @@ def load_img():
     img_data = filedialog.askopenfilename(initialdir="/", title="Choose Image", filetypes=(("all files", "*.*"), ("png files", "*.png")))
     img = cv2.imread(img_data)
     img = emotion(img)
-    img = image_resize(img)
     b,g,r = cv2.split(img)             # splits image into 3 channels
     img = cv2.merge((r,g,b))           # cv2 reads image in BGR while model reads in RGB format
     im = Image.fromarray(img)          # saves img in .jpeg format
@@ -82,7 +69,7 @@ def live_img():
     global img, img_data, after_id
     for img_display in frame.winfo_children():
         img_display.destroy()
-    _, cam_img = cap.read()
+    _, cam_img = cap.read()        # _ gives if there was successful webcam read
     img = emotion(cam_img)
     b,g,r = cv2.split(img)
     img = cv2.merge((r,g,b))
@@ -108,7 +95,7 @@ def live_setup():
 
 root = tk.Tk()                    # initializes tkinter interpreter and creates root window 
 root.title('EMOTIONS')            # title bar
-root.resizable(False, False)      # can the windows be resized
+root.resizable(True, True)        # can the windows be resized
 
 canvas = tk.Canvas(root, height=480, width=600, bg='white')   # creates window canvas
 canvas.pack()                                                 # organizes widgets in blocks before placing them in parent widget
