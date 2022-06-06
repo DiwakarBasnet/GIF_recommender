@@ -6,6 +6,7 @@ import tensorflow as tf
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing import image
 import cv2
+import gif
 
 # model selection
 # model = tf.keras.models.model_from_json(open("Model/model.json","r").read())
@@ -20,6 +21,7 @@ after_id = 0
 
 # model prediction on image
 def emotion(img):
+    global predicted_emotion
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces_detected = face_haar_cascade.detectMultiScale(gray_img, 1.4, 5)    # 1.4 and 5 are scaleFactor and minNeighbors
     for (x,y,w,h) in faces_detected:
@@ -112,3 +114,4 @@ live_btn.pack(side = tk.RIGHT)
 
 load_splash()
 root.mainloop()            # needed for tkinter files
+gif
