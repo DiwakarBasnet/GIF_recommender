@@ -1,12 +1,13 @@
 import tkinter as tk                 # for GUI
-from tkinter import W, filedialog    # offers a set of dialogs while working with files
+from tkinter import W, Toplevel, filedialog    # offers a set of dialogs while working with files
+from tkinter import *
 from PIL import ImageTk, Image       # Python Imaging Library adds image processing capabilities
 import numpy as np
 import tensorflow as tf
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing import image
 import cv2
-import gif
+from gif import GIF
 
 # model selection
 # model = tf.keras.models.model_from_json(open("Model/model.json","r").read())
@@ -26,7 +27,7 @@ def emotion(img):
     faces_detected = face_haar_cascade.detectMultiScale(gray_img, 1.4, 5)    # 1.4 and 5 are scaleFactor and minNeighbors
     for (x,y,w,h) in faces_detected:
         cv2.rectangle(img, (x,y), (x+w,y+h), (0,255,0), 2)
-        crop_rgb = img[y:y+w, x:x+h]                # cropping region i.e face area from image
+        crop_rgb = img[y:y+h, x:x+w]                # cropping region i.e face area from image
         crop_rgb = cv2.resize(crop_rgb, (48,48))
         img_pixels = image.img_to_array(crop_rgb)
         img_pixels = np.expand_dims(img_pixels, axis = 0)
@@ -46,7 +47,6 @@ def load_splash():
     basewidth = 600
     wpercent = (basewidth / float(img.size[0]))
     hsize = int((float(img.size[1] * float(wpercent))))
-    #img = img.resize((basewidth, hsize), Image.ANTIALIAS)
     img = ImageTk.PhotoImage(img)
     panel_image = tk.Label(frame, image=img).pack()
 
@@ -65,13 +65,15 @@ def load_img():
     file_name = img_data.split('/')
     panel = tk.Label(frame, text=str(file_name[len(file_name) -1]).upper()).pack()
     panel_image = tk.Label(frame, image=img).pack()    # tk.Label --> implements a display box for text or images
+    find_btn = tk.Button(root, text = 'Find', padx=35, pady=10, command=find_gif)
+    find_btn.pack(side = tk.BOTTOM)
 
 # capture images from live webcam
 def live_img():
     global img, img_data, after_id
     for img_display in frame.winfo_children():
         img_display.destroy()
-    _, cam_img = cap.read()        # _ gives if there was successful webcam read
+    (_, cam_img) = cap.read()        # _ gives if there was successful webcam read
     img = emotion(cam_img)
     b,g,r = cv2.split(img)
     img = cv2.merge((r,g,b))
@@ -93,7 +95,34 @@ def live_setup():
         live_btn_text.set("Stop")
         live_img()
         live_tab = True
+        find_btn = tk.Button(root, text = 'Find', padx=35, pady=10, command=find_gif)
+        find_btn.pack(side = tk.BOTTOM)
 
+def find_gif():
+    global label, frames
+    new_window = Toplevel(root)
+    new_window.title(predicted_emotion)
+    GIF(predicted_emotion)
+    # animated GIF consists of number of frames in single file, we have to specify each frame in Tkinter 
+    frames = []
+    i = 0
+    while True:   #  Add frames until out of range
+        try:
+            frames.append(PhotoImage(file='test.gif', format = 'gif -index %i' %(i)))
+            i = i + 1
+        except TclError:
+            break
+    label = Label(new_window)
+    label.pack()
+    new_window.after(0, update, 0)
+
+def update(ind):    # Display and loop the GIF
+    if ind >= len(frames):
+        ind = 0
+    frame = frames[ind]
+    ind += 1
+    label.configure(image=frame)
+    root.after(100, update, ind)
 
 root = tk.Tk()                    # initializes tkinter interpreter and creates root window 
 root.title('EMOTIONS')            # title bar
@@ -114,4 +143,3 @@ live_btn.pack(side = tk.RIGHT)
 
 load_splash()
 root.mainloop()            # needed for tkinter files
-gif
