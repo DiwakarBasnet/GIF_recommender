@@ -15,7 +15,7 @@ def GIF(pred):
         gif_id = response.data[0]
         gif_url = gif_id.images.downsized.url
     except ApiException:
-        print("Exception when calling DefaultApi->gifs_search_get: %s\n"%e)
+        print("Exception when calling DefaultApi->gifs_search_get\n")
 
     # download the GIF
     with open('test.gif','wb') as f:
